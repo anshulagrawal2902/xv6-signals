@@ -45,34 +45,8 @@ enum procstate
 };
 enum signum
 {
-  SIGHUP,
-  SIGQUIT,
-  SIGILL,
-  SIGTRAP,
-  SIGIOT,
-  SIGBUS,
-  SIGFPE,
-  SIGUSR1,
-  SIGSEGV,
-  SIGUSR2,
-  SIGPIPE,
-  SIGALRM,
-  SIGTERM,
-  SIGSTKFLT,
-  SIGCHLD,
-  SIGCONTv,
-  SIGSTOP,
-  SIGTSTP,
-  SIGTTIN,
-  SIGTTOU,
-  SIGURG,
-  SIGXCPU,
-  SIGXFSZ,
-  SIGVTALRM,
-  SIGPROF,  // 27	Profiling alarm clock (4.2 BSD)
-  SIGWINCH, // 28	Window size change (4.3 BSD, Sun)
-  SIGIO,    // 29	I/O now possible (4.2 BSD)
-  SIGPWR    // 30	Power failure restart (System V)
+  SIGKILL,
+  SIGSTOP
 };
 
 // Per-process state
@@ -91,7 +65,8 @@ struct proc
   struct file *ofile[NOFILE]; // Open files
   struct inode *cwd;          // Current directory
   char name[16];              // Process name (debugging)
-  int pendingSignals[MAX_SIGNALS];
+  int pendingSignals[MAX_SIGNALS]; //signals to be delivered
+  int (*signalHandlers[MAX_SIGNALS])(void); //array for signal handler function pointers
 };
 
 // Process memory is laid out contiguously, low addresses first:
