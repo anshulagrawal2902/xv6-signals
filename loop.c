@@ -3,8 +3,12 @@
 #include "user.h"
 #include "fs.h"
 
-
 int main(int argc , char* argv[]){
-    kill1(atoi(argv[0]), atoi(argv[1]));
-    exit();
+    int a = getpid();
+    for(;;)
+    {
+        printf(1, "%d", a);
+        sleep(1);
+    }   
+ exit();
 }

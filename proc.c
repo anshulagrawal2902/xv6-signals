@@ -496,6 +496,8 @@ kill(int pid)
   return -1;
 }
 
+
+//send the process with given pid signal signum
 int kill1(int pid , int signum){
   struct proc* p;
 
