@@ -69,6 +69,20 @@ argptr(int n, char **pp, int size)
   return 0;
 }
 
+int
+argfun(int n, void( **pp)(int), int size)
+{
+  int i;
+  struct proc *curproc = myproc();
+ 
+  if(argint(n, &i) < 0)
+    return -1;
+  if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+    return -1;
+  *pp = (void(*)(int))i;
+  return 0;
+}
+
 // Fetch the nth word-sized system call argument as a string pointer.
 // Check that the pointer is valid and the string is nul-terminated.
 // (There is no shared writable memory, so the string can't change

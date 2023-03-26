@@ -121,6 +121,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int             kill1(int,int);
+int             signal(int, void(*signalHandler)(int));
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -155,6 +156,7 @@ int             argptr(int, char**, int);
 int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
+int             argfun(int , void( **)(int), int );
 void            syscall(void);
 
 // timer.c

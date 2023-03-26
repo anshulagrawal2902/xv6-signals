@@ -2,6 +2,8 @@
 #define SIGSTOP 2
 #define SIGINT 3
 
+int doSignal(int signo);
+
 typedef void(*signalHandler)(int);
 
 struct sigaction

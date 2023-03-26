@@ -341,6 +341,13 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
+      for(int i = 0; i < MAX_SIGNALS; i++){
+        if(c->proc->pendingSignals[i] == 1){
+          c->proc->pendingSignals[i] = 0;
+          doSignal(i);
+          continue;
+        }
+      }
       switchuvm(p);
       p->state = RUNNING;
 
@@ -498,6 +505,9 @@ kill(int pid)
 }
 
 void dh_sigkill(int signo){
+  cprintf("into default sigkill\n");
+  struct proc* curproc = myproc();
+  curproc->killed = 1;
 
 }
 
@@ -529,9 +539,9 @@ int kill1(int pid , int signum){
   return -1;
 }
 
-int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact ){
+// int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact ){
 
-}
+// }
 
 int signal(int signum, signalHandler fn){
   struct proc* curproc = myproc();
