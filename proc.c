@@ -497,6 +497,18 @@ kill(int pid)
   return -1;
 }
 
+void dh_sigkill(int signo){
+
+}
+
+void dh_sigstop(int signo){
+
+}
+
+void dh_sigint(int signo){
+
+}
+
 
 //send the process with given pid signal signum
 int kill1(int pid , int signum){
@@ -515,8 +527,19 @@ int kill1(int pid , int signum){
   }
   release(&ptable.lock);
   return -1;
+}
+
+int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact ){
 
 }
+
+int signal(int signum, signalHandler fn){
+  struct proc* curproc = myproc();
+  curproc->hasUserHandler[signum] = 1;
+  curproc->signalHandlers[signum] = fn;
+  return 0;
+}
+
 
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.

@@ -8,6 +8,9 @@
         "mmu.h": "c",
         "memlayout.h": "c",
         "param.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "syscall.h": "c",
+        "signals.h": "c",
+        "limits": "c"
     }
 }

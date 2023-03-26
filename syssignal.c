@@ -16,3 +16,14 @@ int sys_kill1(void){
   return kill1(pid, signum);
 }
 
+int sys_sigaction(void){
+
+}
+
+int sys_signal(void){
+  int signo;
+  void (*fn)(int);
+  if(argint(0, &signo) < 0 || argptr(1, &fn, sizeof(fn)) < 0){
+    return signal(signo, fn);
+  }
+}

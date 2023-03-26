@@ -66,7 +66,9 @@ struct proc
   struct inode *cwd;          // Current directory
   char name[16];              // Process name (debugging)
   int pendingSignals[MAX_SIGNALS]; //signals to be delivered
-  int (*signalHandlers[MAX_SIGNALS])(void); //array for signal handler function pointers
+  int blockedSignals[MAX_SIGNALS]; // list of blocked signals
+  int hasUserHandler[MAX_SIGNALS]; //checks whether user has set handler
+  void (*signalHandlers[MAX_SIGNALS])(int); //array for signal handler function pointers
 };
 
 // Process memory is laid out contiguously, low addresses first:
