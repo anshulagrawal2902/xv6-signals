@@ -43,11 +43,6 @@ enum procstate
   RUNNING,
   ZOMBIE
 };
-enum signum
-{
-  SIGKILL,
-  SIGSTOP
-};
 
 // Per-process state
 struct proc

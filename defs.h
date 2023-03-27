@@ -121,7 +121,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int             kill1(int,int);
-int             signal(int, void(*signalHandler)(int));
+int             signal(int, void(*)(int));
 
 // swtch.S
 void            swtch(struct context**, struct context*);

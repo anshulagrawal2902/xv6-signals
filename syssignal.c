@@ -24,8 +24,8 @@ int sys_signal(void){
   int signo;
   void (*fn)(int);
   if(argint(0, &signo) < 0 || argfun(1, &fn, sizeof(fn)) < 0){
-    return signal(signo, fn);
+    return -1;
   }
-  return 0;
+  return signal(signo, fn);
 }
 

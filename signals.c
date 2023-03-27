@@ -17,22 +17,14 @@ static void(*defaultHandlers[])(int) = {
     [SIGSTOP] dh_sigstop,
     [SIGINT]  dh_sigint,
 };
-// 
-int doSignal(int signo){
-  struct proc* curproc  = myproc();
-  if(curproc->hasUserHandler[signo] == 1){
-    // TODO :switch stack to process stack and run the function pointed by signal handler
-  }
-  else{
-    defaultHandlers[signo](signo);
-  }
-//   if(curproc->pid == 1 && (signo==SIGKILL || signo==SIGSTOP)){
 
-//   }
-//   else if(signo == SIGKILL){
-
-//     kill(curproc->pid);
-//   }
+//function that runs default signal handler in kernel stack 
+int doDefaultSignal(int signo){
+  defaultHandlers[signo](signo);
   return 0;
+}
 
+//funtion defined to run user handlers in user stack
+int doSignal(int signo){
+  return 0;
 }

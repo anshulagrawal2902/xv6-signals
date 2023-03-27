@@ -2,6 +2,7 @@
 #define SIGSTOP 2
 #define SIGINT 3
 
+int doDefaultSignal(int signo);
 int doSignal(int signo);
 
 typedef void(*signalHandler)(int);
