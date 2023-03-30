@@ -21,6 +21,7 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+extern int pause_chan;
 
 void pinit(void)
 {
@@ -353,21 +354,31 @@ void scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
+
+      for(int i = 0; i < MAX_SIGNALS; i++){
+        if(c->proc->pendingSignals[i] == 1){
+          p->chan = 0;
+          c->proc->pendingSignals[i] = 0;
+          if(c->proc->hasUserHandler[i] == 0){
+            doDefaultSignal(i);
+          }
+        }
+      }
+
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
         if (c->proc->pendingSignals[i] == 1)
         {
+          p->chan = 0;
           c->proc->pendingSignals[i] = 0;
-          if(c->proc->hasUserHandler[i]){
-            p->context->eip = c->proc->signalHandlers[i];
-            doSignal(i);
+          if (c->proc->hasUserHandler[i])
+          {
+            p->tf->eip = (uint)c->proc->signalHandlers[i];
+            break;
           }
-          else{
-            doDefaultSignal(i);
-          }
-          break;
         }
       }
+      
       switchuvm(p);
       p->state = RUNNING;
 
@@ -413,7 +424,7 @@ void yield(void)
   acquire(&ptable.lock); // DOC: yieldlock
   myproc()->state = RUNNABLE;
   sched();
-  //TODO : Run user defined signal handler
+  // TODO : Run user defined signal handler
   release(&ptable.lock);
 }
 
@@ -466,10 +477,10 @@ void sleep(void *chan, struct spinlock *lk)
   p->state = SLEEPING;
 
   sched();
-  // TODO : Run user defined  signal handler
 
   // Tidy up.
-  p->chan = 0;
+  if(p->chan != &pause_chan)
+    p->chan = 0;
 
   // Reacquire original lock.
   if (lk != &ptable.lock)
@@ -537,6 +548,20 @@ void dh_sigstop(int signo)
 
 void dh_sigint(int signo)
 {
+}
+
+int pause(int *pause_chan)
+{
+  struct proc *curproc = myproc();
+  curproc->chan = pause_chan;
+  curproc->state == SLEEPING;
+  acquire(&ptable.lock);
+
+  while (curproc->chan == pause_chan)
+    sleep(&pause_chan, &ptable.lock);
+
+  release(&ptable.lock);
+  return 0;
 }
 
 // send the process with given pid signal signum

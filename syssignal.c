@@ -8,6 +8,8 @@
 #include "proc.h"
 #include "signals.h"
 
+extern int pause_chan;
+
 int sys_kill1(void){
 
   int pid, signum;
@@ -16,9 +18,9 @@ int sys_kill1(void){
   return kill1(pid, signum);
 }
 
-// int sys_sigaction(void){
-
-// }
+int sys_pause(void){
+  pause(&pause_chan);
+}
 
 int sys_signal(void){
   int signo;
