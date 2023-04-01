@@ -2,6 +2,7 @@
 #define SIGKILL 1
 #define SIGSTOP 2
 #define SIGINT 3
+#define SIG_DFL 0
 
 #define SIG_BLOCK 100
 #define SIG_UNBLOCK 101

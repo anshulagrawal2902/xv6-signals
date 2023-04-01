@@ -37,11 +37,24 @@ int main(int argc , char* argv[]){
         printf(1, "Child process ended\n");
         exit();
     } else if (pid > 0) {
-        pause();
+        // pause();
         // parent process
         printf(1, "Parent process started with pid %d\n", getpid());
         printf(1, "Parent process resumed after receiving signal\n");
-        kill1(pid, SIGKILL);
+        if (kill1(pid, SIGKILL) == -1) {
+            printf(1, "Error killing child process\n");
+            exit();
+        }
+        signal(SIGSTOP, SIG_DFL);
+        for(int i = 0; i < 10; i++)
+        {
+            printf(1, "Wait for SIG_DFL %d\n", i);
+        }
+        kill1(a, SIGSTOP);
+        for(int i = 0; i < 10; i++)
+        {
+            printf(1, "Wait for SIG_DFL%d\n", i);
+        }
         printf(1, "Parent process ended\n");
         exit();
     } else {
