@@ -554,7 +554,7 @@ int pause(int *pause_chan)
 {
   struct proc *curproc = myproc();
   curproc->chan = pause_chan;
-  curproc->state == SLEEPING;
+  curproc->state = SLEEPING;
   acquire(&ptable.lock);
 
   while (curproc->chan == pause_chan)
@@ -596,6 +596,11 @@ int signal(int signum, signalHandler fn)
   curproc->hasUserHandler[signum] = 1;
   curproc->signalHandlers[signum] = fn;
   cprintf("funciton pointer inside singnal %x", fn);
+  return 0;
+}
+
+int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset){
+  cprintf("hello from sigprocmask");
   return 0;
 }
 

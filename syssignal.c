@@ -19,7 +19,7 @@ int sys_kill1(void){
 }
 
 int sys_pause(void){
-  pause(&pause_chan);
+  return pause(&pause_chan);
 }
 
 int sys_signal(void){
@@ -29,5 +29,17 @@ int sys_signal(void){
     return -1;
   }
   return signal(signo, fn);
+}
+
+int sys_sigprocmask(void){
+  int how;
+  struct sigset_t* set;
+  struct sigset_t* oldset;
+  if(argint(0, &how) < 0 || argptr(1, (void*)&set, sizeof(set)) < 0  || argptr(2, (void*)&oldset, sizeof(oldset)) < 0 ){
+    return -1;
+  }
+  return sigprocmask(how, set, oldset);
+  // cprintf("inside sys_sigprocmask \n");
+  // return 0;
 }
 

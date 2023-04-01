@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+struct sigset_t;
 
 // system calls
 int fork(void);
@@ -26,6 +27,7 @@ int uptime(void);
 int kill1(int,int);
 int signal(int,void(*)(int));
 int pause(void);
+int sigprocmask(int, struct sigset_t*, struct sigset_t*);
 
 // ulib.c
 int stat(const char*, struct stat*);

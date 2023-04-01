@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct sigset_t;
 
 // bio.c
 void            binit(void);
@@ -123,6 +124,7 @@ void            yield(void);
 int             kill1(int,int);
 int             signal(int, void(*)(int));
 int             pause(int*);
+int             sigprocmask(int, struct sigset_t*, struct sigset_t*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

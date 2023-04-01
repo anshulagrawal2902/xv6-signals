@@ -11,5 +11,5 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
-#define MAX_SIGNALS    30 //maximum number of signals sent to a process
+#define MAX_SIGNALS    30 //maximum number of signals that can be sent to a process
 

@@ -15,6 +15,9 @@
         "spinlock.h": "c",
         "fs.h": "c",
         "user.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "stdio.h": "c",
+        "signal.h": "c",
+        "sigset_t.h": "c"
     }
 }
