@@ -537,7 +537,7 @@ int kill(int pid)
 
 void dh_sigkill(int signo)
 {
-  cprintf("into default sigkill\n");
+  cprintf("Running default sigkill\n");
   struct proc *curproc = myproc();
   curproc->killed = 1;
 }
@@ -595,7 +595,7 @@ int signal(int signum, signalHandler fn)
   struct proc *curproc = myproc();
   curproc->hasUserHandler[signum] = 1;
   curproc->signalHandlers[signum] = fn;
-  cprintf("funciton pointer inside singnal %x", fn);
+  cprintf("funciton pointer inside singnal %x\n", fn);
   return 0;
 }
 
