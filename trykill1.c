@@ -20,12 +20,12 @@ void temp2(int signo){
 }
 
 int main(int argc , char* argv[]){
-    // int a = getpid();
+    int a = getpid();
 
-    struct sigset_t mask;
-    struct sigset_t oldmask;
+    // struct sigset_t mask;
+    // struct sigset_t oldmask;
 
-    sigprocmask(SIG_BLOCK, &mask, &oldmask);
+    // sigprocmask(SIG_BLOCK, &mask, &oldmask);
     // printf(1, "printing pid in user land %d\n", a);
 
     // signal(SIGKILL, &temp); 
@@ -44,30 +44,27 @@ int main(int argc , char* argv[]){
     //     printf(1, "%d \n", i);
     // }
 
-    // int b = fork();
-    // if(b == 0){
-    //     // signal(SIGSTOP, &temp);
-    //     // int a = getpid();
-    //     // while(1){
-    //     for(int i = 400; i < 500; i++){
-    //         printf(1, "%d \n", i);
-    //     }
-    //         sleep(1);
-    //         printf(1, "i m child running\n");
-    //         kill1(a, SIGKILL);
+    int b = fork();
+    if(b == 0){
+        for(int i = 400; i < 500; i++){
+            printf(1, "%d \n", i);
+        }
+            sleep(1);
+            printf(1, "i m child running\n");
+            kill1(a, SIGSTOP);
 
-    //     for(int i = 100; i < 110 ; i++){
-    //         printf(1, "%d \n", i);
-    //     }
-    //     // }
-    // }
-    // else{
-    //     // pause();
-    //     for(int i = 0; i < 1000; i++){
-    //         printf(1, "%d \n", i);
-    //     }
-    //     // kill1(b,SIGKILL);
+        for(int i = 100; i < 110 ; i++){
+            printf(1, "%d \n", i);
+        }
+    }
+    else{
+        signal(SIGSTOP, &temp);
+        pause();
+        for(int i = 0; i < 100; i++){
+            printf(1, "%d \n", i);
+        }
+        // kill1(b,SIGKILL);
         
-    // }
+    }
     exit();
 }

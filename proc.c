@@ -575,7 +575,7 @@ int kill1(int pid, int signum)
     if (p->pid == pid)
     {
       p->pendingSignals[signum] = 1; // adding signals to pending list
-      // Wake process from sleep if necessary.
+      // Wake process from sleep if necessary.  
       if (p->state == SLEEPING)
         p->state = RUNNABLE;
       release(&ptable.lock);
@@ -624,7 +624,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset){
     }
   }
   else if(how == SIG_SETMASK){
-    //TODO : behaviour of SIG_SETMASK
+    //TODO : behaviour of SIG_SETMASK  
   }
   return 0;
 }
