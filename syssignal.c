@@ -39,7 +39,5 @@ int sys_sigprocmask(void){
     return -1;
   }
   return sigprocmask(how, set, oldset);
-  // cprintf("inside sys_sigprocmask \n");
-  // return 0;
 }
 

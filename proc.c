@@ -356,10 +356,10 @@ void scheduler(void)
       c->proc = p;
 
       for(int i = 0; i < MAX_SIGNALS; i++){
-        if(c->proc->pendingSignals[i] == 1){
+        if(c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0){
           p->chan = 0;
-          c->proc->pendingSignals[i] = 0;
           if(c->proc->hasUserHandler[i] == 0){
+            c->proc->pendingSignals[i] = 0;
             doDefaultSignal(i);
           }
         }
@@ -367,11 +367,11 @@ void scheduler(void)
 
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
-        if (c->proc->pendingSignals[i] == 1)
+        if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
         {
           p->chan = 0;
           c->proc->pendingSignals[i] = 0;
-          if (c->proc->hasUserHandler[i])
+          if (c->proc->hasUserHandler[i] == 1)
           {
             p->tf->eip = (uint)c->proc->signalHandlers[i];
             break;
@@ -600,7 +600,32 @@ int signal(int signum, signalHandler fn)
 }
 
 int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset){
-  cprintf("hello from sigprocmask");
+  struct proc *curproc = myproc();
+  for(int i = 0; i < MAX_SIGNALS; i++){
+    if(set->mask[i] == 1){
+      oldset->mask[i] = 1;
+    }
+    else{
+      oldset->mask[i] = 0;
+    }
+  }
+  if(how == SIG_BLOCK){
+    for(int i = 0; i < MAX_SIGNALS; i++){
+      if(set->mask[i] == 1){
+        curproc->blockedSignals[i] = 1;
+      }
+    }
+  }
+  else if(how == SIG_UNBLOCK){
+    for(int i = 0; i < MAX_SIGNALS; i++){
+      if(set->mask[i] == 1){
+        curproc->blockedSignals[i] = 0;
+      }
+    }
+  }
+  else if(how == SIG_SETMASK){
+    //TODO : behaviour of SIG_SETMASK
+  }
   return 0;
 }
 

@@ -3,6 +3,7 @@
 #include "fcntl.h"
 #include "user.h"
 #include "x86.h"
+#include "signals.h"
 
 char*
 strcpy(char *s, const char *t)
@@ -103,4 +104,18 @@ memmove(void *vdst, const void *vsrc, int n)
   while(n-- > 0)
     *dst++ = *src++;
   return vdst;
+}
+
+void
+sigemptyset(struct sigset_t* mask){
+  for(int i  = 0; i< MAX_SIGNALS ; i++){
+    mask->mask[i] = 0;
+  }
+  return;
+}
+
+void 
+sigaddset(struct sigset_t* mask, int signum){
+  mask->mask[signum] = 1;
+  return;
 }
