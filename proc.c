@@ -537,13 +537,17 @@ int kill(int pid)
 
 void dh_sigkill(int signo)
 {
-  cprintf("into default sigkill\n");
+  cprintf("Running default sigkill\n");
   struct proc *curproc = myproc();
   curproc->killed = 1;
 }
 
 void dh_sigstop(int signo)
 {
+  cprintf("Running default sigstop\n");
+  struct proc *curproc = myproc();
+  curproc->state = SLEEPING;
+  sched();
 }
 
 void dh_sigint(int signo)
@@ -593,9 +597,33 @@ int kill1(int pid, int signum)
 int signal(int signum, signalHandler fn)
 {
   struct proc *curproc = myproc();
-  curproc->hasUserHandler[signum] = 1;
-  curproc->signalHandlers[signum] = fn;
-  cprintf("funciton pointer inside singnal %x", fn);
+
+  if (fn == (signalHandler) SIG_DFL) {
+    // Restore the default signal handler
+    switch (signum) {
+      case SIGSTOP:
+        curproc->hasUserHandler[SIGKILL] = 0;
+        curproc->signalHandlers[SIGKILL] = &dh_sigstop;
+        break;
+      case SIGINT:
+        curproc->hasUserHandler[SIGINT] = 0;
+        curproc->signalHandlers[SIGINT] = &dh_sigint;
+        break;
+      case SIGKILL:
+        curproc->hasUserHandler[SIGSTOP] = 0;
+        curproc->signalHandlers[SIGSTOP] = &dh_sigkill;
+        break;
+      // Add cases for other signals here
+      default:
+        return -1;
+    }
+  } else {
+    // Install a custom signal handler
+    curproc->hasUserHandler[signum] = 1;
+    curproc->signalHandlers[signum] = fn;
+    cprintf("function pointer inside signal %x\n", fn);
+  }
+
   return 0;
 }
 
