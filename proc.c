@@ -20,6 +20,7 @@ int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
+
 static void wakeup1(void *chan);
 extern int pause_chan;
 
@@ -370,9 +371,9 @@ void scheduler(void)
         if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
         {
           p->chan = 0;
-          c->proc->pendingSignals[i] = 0;
           if (c->proc->hasUserHandler[i] == 1)
           {
+            c->proc->pendingSignals[i] = 0;
             p->tf->eip = (uint)c->proc->signalHandlers[i];
             break;
           }
@@ -544,10 +545,12 @@ void dh_sigkill(int signo)
 
 void dh_sigstop(int signo)
 {
+  acquire(&ptable.lock);
   cprintf("Running default sigstop\n");
   struct proc *curproc = myproc();
   curproc->state = SLEEPING;
   sched();
+  release(&ptable.lock);
 }
 
 void dh_sigint(int signo)
@@ -597,28 +600,23 @@ int kill1(int pid, int signum)
 int signal(int signum, signalHandler fn)
 {
   struct proc *curproc = myproc();
-
-  if (fn == (signalHandler) SIG_DFL) {
+  if (fn == SIG_DFL) {
     // Restore the default signal handler
     switch (signum) {
       case SIGSTOP:
-        curproc->hasUserHandler[SIGKILL] = 0;
-        curproc->signalHandlers[SIGKILL] = &dh_sigstop;
+        curproc->hasUserHandler[SIGSTOP] = 0;
         break;
       case SIGINT:
         curproc->hasUserHandler[SIGINT] = 0;
-        curproc->signalHandlers[SIGINT] = &dh_sigint;
         break;
       case SIGKILL:
-        curproc->hasUserHandler[SIGSTOP] = 0;
-        curproc->signalHandlers[SIGSTOP] = &dh_sigkill;
+        curproc->hasUserHandler[SIGKILL] = 0;
         break;
-      // Add cases for other signals here
       default:
         return -1;
     }
   } else {
-    // Install a custom signal handler
+    
     curproc->hasUserHandler[signum] = 1;
     curproc->signalHandlers[signum] = fn;
     cprintf("function pointer inside signal %x\n", fn);

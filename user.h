@@ -42,5 +42,7 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+void sigaddset(struct sigset_t*, int);
+void sigemptyset(struct sigset_t*);
 
 // 
