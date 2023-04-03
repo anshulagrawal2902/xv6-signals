@@ -460,7 +460,7 @@ void forkret(void)
 }
 
 // Atomically release lock and sleep on chan.
-// Reacquires lock when awakened.
+// Reacquires lock when awakened. 
 void sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
