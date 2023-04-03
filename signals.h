@@ -2,6 +2,7 @@
 #define SIGKILL 1
 #define SIGSTOP 2
 #define SIGINT 3
+#define SIGCONT 4
 
 #define SIG_DFL ((signalHandler) 0)
 

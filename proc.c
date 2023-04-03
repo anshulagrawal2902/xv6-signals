@@ -20,9 +20,9 @@ int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
-
 static void wakeup1(void *chan);
 extern int pause_chan;
+extern int stop_chan;
 
 void pinit(void)
 {
@@ -355,17 +355,23 @@ void scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
+      p->state = RUNNING;
 
-      for(int i = 0; i < MAX_SIGNALS; i++){
-        if(c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0){
+      // Running loop for default handlers
+      for (int i = 0; i < MAX_SIGNALS; i++)
+      {
+        if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
+        {
           p->chan = 0;
-          if(c->proc->hasUserHandler[i] == 0){
+          if (c->proc->hasUserHandler[i] == 0)
+          {
             c->proc->pendingSignals[i] = 0;
             doDefaultSignal(i);
           }
         }
       }
 
+      // Running loop for user handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
         if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
@@ -379,9 +385,12 @@ void scheduler(void)
           }
         }
       }
-      
+
+      if(p->state == SLEEPING){
+        continue;
+      }
+
       switchuvm(p);
-      p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -480,7 +489,7 @@ void sleep(void *chan, struct spinlock *lk)
   sched();
 
   // Tidy up.
-  if(p->chan != &pause_chan)
+  if (p->chan != &pause_chan)
     p->chan = 0;
 
   // Reacquire original lock.
@@ -545,12 +554,21 @@ void dh_sigkill(int signo)
 
 void dh_sigstop(int signo)
 {
-  acquire(&ptable.lock);
-  cprintf("Running default sigstop\n");
   struct proc *curproc = myproc();
+  cprintf("Running default sigstop\n");
   curproc->state = SLEEPING;
-  sched();
-  release(&ptable.lock);
+  curproc->chan = &stop_chan;
+}
+
+void dh_sigcont(int signo)
+{
+  struct proc *curproc = myproc();
+  cprintf("Running default sigcont\n");
+  if (curproc->chan == &stop_chan)
+  {
+    curproc->state = RUNNABLE;
+    curproc->chan = 0;
+  }
 }
 
 void dh_sigint(int signo)
@@ -560,9 +578,10 @@ void dh_sigint(int signo)
 int pause(int *pause_chan)
 {
   struct proc *curproc = myproc();
+  acquire(&ptable.lock);
+
   curproc->chan = pause_chan;
   curproc->state = SLEEPING;
-  acquire(&ptable.lock);
 
   while (curproc->chan == pause_chan)
     sleep(&pause_chan, &ptable.lock);
@@ -582,7 +601,7 @@ int kill1(int pid, int signum)
     if (p->pid == pid)
     {
       p->pendingSignals[signum] = 1; // adding signals to pending list
-      // Wake process from sleep if necessary.  
+      // Wake process from sleep if necessary.
       if (p->state == SLEEPING)
         p->state = RUNNABLE;
       release(&ptable.lock);
@@ -600,23 +619,27 @@ int kill1(int pid, int signum)
 int signal(int signum, signalHandler fn)
 {
   struct proc *curproc = myproc();
-  if (fn == SIG_DFL) {
+  if (fn == SIG_DFL)
+  {
     // Restore the default signal handler
-    switch (signum) {
-      case SIGSTOP:
-        curproc->hasUserHandler[SIGSTOP] = 0;
-        break;
-      case SIGINT:
-        curproc->hasUserHandler[SIGINT] = 0;
-        break;
-      case SIGKILL:
-        curproc->hasUserHandler[SIGKILL] = 0;
-        break;
-      default:
-        return -1;
+    switch (signum)
+    {
+    case SIGSTOP:
+      curproc->hasUserHandler[SIGSTOP] = 0;
+      break;
+    case SIGINT:
+      curproc->hasUserHandler[SIGINT] = 0;
+      break;
+    case SIGKILL:
+      curproc->hasUserHandler[SIGKILL] = 0;
+      break;
+    default:
+      return -1;
     }
-  } else {
-    
+  }
+  else
+  {
+
     curproc->hasUserHandler[signum] = 1;
     curproc->signalHandlers[signum] = fn;
     cprintf("function pointer inside signal %x\n", fn);
@@ -625,32 +648,54 @@ int signal(int signum, signalHandler fn)
   return 0;
 }
 
-int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset){
+int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
+{
   struct proc *curproc = myproc();
-  for(int i = 0; i < MAX_SIGNALS; i++){
-    if(set->mask[i] == 1){
+  for (int i = 0; i < MAX_SIGNALS; i++)
+  {
+    if (curproc->blockedSignals[i] == 1)
+    {
       oldset->mask[i] = 1;
     }
-    else{
+    else
+    {
       oldset->mask[i] = 0;
     }
   }
-  if(how == SIG_BLOCK){
-    for(int i = 0; i < MAX_SIGNALS; i++){
-      if(set->mask[i] == 1){
+  if (how == SIG_BLOCK)
+  {
+    for (int i = 0; i < MAX_SIGNALS; i++)
+    {
+      if (set->mask[i] == 1)
+      {
         curproc->blockedSignals[i] = 1;
       }
     }
   }
-  else if(how == SIG_UNBLOCK){
-    for(int i = 0; i < MAX_SIGNALS; i++){
-      if(set->mask[i] == 1){
+  else if (how == SIG_UNBLOCK)
+  {
+    for (int i = 0; i < MAX_SIGNALS; i++)
+    {
+      if (set->mask[i] == 1)
+      {
         curproc->blockedSignals[i] = 0;
       }
     }
   }
-  else if(how == SIG_SETMASK){
-    //TODO : behaviour of SIG_SETMASK  
+  else if (how == SIG_SETMASK)
+  {
+    // TODO : behaviour of SIG_SETMASK
+    for (int i = 0; i < MAX_SIGNALS; i++)
+    {
+      if (oldset->mask[i] == 1)
+      {
+        curproc->blockedSignals[i] = 1;
+      }
+      else
+      {
+        curproc->blockedSignals[i] = 0;
+      }
+    }
   }
   return 0;
 }

@@ -11,14 +11,16 @@
 extern void dh_sigkill(int);
 extern void dh_sigstop(int);
 extern void dh_sigint(int);
+extern void dh_sigcont(int);
 
 static void(*defaultHandlers[])(int) = {
     [SIGKILL] dh_sigkill,
     [SIGSTOP] dh_sigstop,
     [SIGINT]  dh_sigint,
+    [SIGCONT] dh_sigcont,
 };
 
-//function that runs default signal handler in kernel stack 
+// function that runs default signal handler in kernel stack 
 int doDefaultSignal(int signo){
   defaultHandlers[signo](signo);
   return 0;

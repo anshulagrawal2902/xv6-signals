@@ -14,6 +14,7 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 uint pause_chan;
+uint stop_chan;
 
 void
 tvinit(void)

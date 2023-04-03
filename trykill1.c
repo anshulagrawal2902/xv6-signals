@@ -7,21 +7,29 @@
 // void print(int signo){
 //     printf(1, "inside user\n");
 // }
-
+int a;
 void handler(int signo) {
     printf(1, "Signal SIGSTOP received in user space\n");
 }
 
 void usr_sig_handler(int signo){
     // printf(1, "Inides user sihnal handler\n");
-    printf(1, "Signal received in user space\n");
+    for(int i = 0; i < 200; i++){
+
+        printf(1, "Signal received in user space %d \n", i);
+    }
+
+    for(int i = 200; i < 400; i++){
+
+        printf(1, "Signal received in user space %d \n", i);
+    }
 }
 void temp2(int signo){
     
 }
 
 int main(int argc , char* argv[]){
-    int a = getpid();
+    a = getpid();
     printf(1, "Starting the program\n");
     printf(1, "Printing pid in user land %d\n", a);
     // struct sigset_t mask;
@@ -35,10 +43,10 @@ int main(int argc , char* argv[]){
         printf(1, "before signal %d \n", i);
     }
 
-    signal(SIGKILL, &usr_sig_handler);
-    signal(SIGKILL, SIG_DFL);
+    // signal(SIGSTOP, &usr_sig_handler);
+    // signal(SIGSTOP, SIG_DFL);
     
-    kill1(a, SIGKILL);
+    kill1(a, SIGSTOP);
 
     for(int i = 100 ; i < 200; i++){
         printf(1, "after signal %d \n", i);
