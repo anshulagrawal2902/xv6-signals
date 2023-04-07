@@ -7,8 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "signals.h"
-struct
-{
+struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 } ptable;
@@ -31,25 +30,23 @@ pinit(void)
 
 // Must be called with interrupts disabled
 int 
-cpuid()
-{
+cpuid() {
   return mycpu() - cpus;
 }
 
 // Must be called with interrupts disabled to avoid the caller being
 // rescheduled between reading lapicid and running through the loop.
-struct cpu *
+struct cpu*
 mycpu(void)
 {
   int apicid, i;
   
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
-  for (i = 0; i < ncpu; ++i){
+  for (i = 0; i < ncpu; ++i) {
     if (cpus[i].apicid == apicid)
       return &cpus[i];
   }
@@ -58,8 +55,8 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
-struct proc *
-myproc(void){
+struct proc*
+myproc(void) {
   struct cpu *c;
   struct proc *p;
   pushcli();
@@ -83,7 +80,7 @@ allocproc(void)
   acquire(&ptable.lock);
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if (p->state == UNUSED)
+    if(p->state == UNUSED)
       goto found;
 
   release(&ptable.lock);
@@ -112,7 +109,7 @@ found:
   *(uint*)sp = (uint)trapret;
 
   sp -= sizeof *p->context;
-  p->context = (struct context *)sp;
+  p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
@@ -121,7 +118,8 @@ found:
 
 //PAGEBREAK: 32
 // Set up first user process.
-void userinit(void)
+void 
+userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
@@ -167,9 +165,7 @@ growproc(int n)
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
-  }
-  else if(n < 0)
-  {
+  } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   }
@@ -189,8 +185,7 @@ fork(void)
   struct proc *curproc = myproc();
 
   // Allocate process.
-  if((np = allocproc()) == 0)
-  {
+  if((np = allocproc()) == 0){
     return -1;
   }
 
@@ -240,8 +235,8 @@ exit(void)
     panic("init exiting");
 
   // Close all open files.
-  for (fd = 0; fd < NOFILE; fd++){
-    if (curproc->ofile[fd]){
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
       fileclose(curproc->ofile[fd]);
       curproc->ofile[fd] = 0;
     }
@@ -258,10 +253,10 @@ exit(void)
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
-  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (p->parent == curproc){
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
       p->parent = initproc;
-      if (p->state == ZOMBIE)
+      if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
   }
@@ -284,12 +279,11 @@ wait(void)
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    {
-      if (p->parent != curproc)
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc)
         continue;
       havekids = 1;
-      if (p->state == ZOMBIE){
+      if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
@@ -451,7 +445,7 @@ void forkret(void)
   // Still holding ptable.lock from scheduler.
   release(&ptable.lock);
 
-  if(first){
+  if (first){
     // Some initialization functions must be run in the context
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
@@ -469,11 +463,10 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-
-  if (p == 0)
+  if(p == 0)
     panic("sleep");
 
-  if (lk == 0)
+  if(lk == 0)
     panic("sleep without lk");
 
   // Must acquire ptable.lock in order to
@@ -482,8 +475,8 @@ sleep(void *chan, struct spinlock *lk)
   // guaranteed that we won't miss any wakeup
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
-  if(lk != &ptable.lock){  // DOC: sleeplock0
-    acquire(&ptable.lock); // DOC: sleeplock1
+  if(lk != &ptable.lock){  //DOC: sleeplock0
+    acquire(&ptable.lock);  //DOC: sleeplock1
     release(lk);
   }
   // Go to sleep.
@@ -497,7 +490,7 @@ sleep(void *chan, struct spinlock *lk)
     p->chan = 0;
 
   // Reacquire original lock.
-  if(lk != &ptable.lock){ // DOC: sleeplock2
+  if(lk != &ptable.lock){  //DOC: sleeplock2
     release(&ptable.lock);
     acquire(lk);
   }
@@ -538,7 +531,7 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if (p->state == SLEEPING)
+      if(p->state == SLEEPING)
         p->state = RUNNABLE;
       release(&ptable.lock);
       return 0;
@@ -582,13 +575,10 @@ int pause(int *pause_chan)
 {
   struct proc *curproc = myproc();
   acquire(&ptable.lock);
-
   curproc->chan = pause_chan;
   curproc->state = SLEEPING;
-
   while (curproc->chan == pause_chan)
     sleep(&pause_chan, &ptable.lock);
-
   release(&ptable.lock);
   return 0;
 }
@@ -597,7 +587,6 @@ int pause(int *pause_chan)
 int kill1(int pid, int signum)
 {
   struct proc *p;
-
   acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
@@ -642,12 +631,10 @@ int signal(int signum, signalHandler fn)
   }
   else
   {
-
     curproc->hasUserHandler[signum] = 1;
     curproc->signalHandlers[signum] = fn;
     cprintf("function pointer inside signal %x\n", fn);
   }
-
   return 0;
 }
 
@@ -710,12 +697,12 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
 void procdump(void)
 {
   static char *states[] = {
-  [UNUSED] "unused",
-  [EMBRYO] "embryo",
-  [SLEEPING] "sleep ",
-  [RUNNABLE] "runble",
-  [RUNNING] "run   ",
-  [ZOMBIE] "zombie"};
+  [UNUSED]    "unused",
+  [EMBRYO]    "embryo",
+  [SLEEPING]  "sleep ",
+  [RUNNABLE]  "runble",
+  [RUNNING]   "run   ",
+  [ZOMBIE]    "zombie"};
   int i;
   struct proc *p;
   char *state;
@@ -730,8 +717,8 @@ void procdump(void)
       state = "???";
     cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
-      getcallerpcs((uint *)p->context->ebp + 2, pc);
-      for(i = 0; i < 10 && pc[i] != 0; i++)
+      getcallerpcs((uint*)p->context->ebp+2, pc);
+      for(i=0; i<10 && pc[i] != 0; i++)
         cprintf(" %p", pc[i]);
     }
     cprintf("\n");

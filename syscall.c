@@ -147,7 +147,6 @@ static int (*syscalls[])(void) = {
 [SYS_signal]  sys_signal,
 [SYS_pause]   sys_pause,
 [SYS_sigprocmask] sys_sigprocmask,
-
 };
 
 void
