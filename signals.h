@@ -18,7 +18,7 @@ typedef void(*signalHandler)(int);
 
 
 struct sigset_t{
-    unsigned long int mask[MAX_SIGNALS]; 
+    unsigned long int mask[MAX_SIGNALS];
 };
 
 struct sigaction
@@ -28,7 +28,7 @@ struct sigaction
     int sa_mask;
     int sa_flags;
     void (*sa_restorer)(void);
-};  
+};
 
 
 

@@ -20,7 +20,7 @@ static void(*defaultHandlers[])(int) = {
     [SIGCONT] dh_sigcont,
 };
 
-// function that runs default signal handler in kernel stack 
+// function that runs default signal handler in kernel stack
 int doDefaultSignal(int signo){
   defaultHandlers[signo](signo);
   return 0;

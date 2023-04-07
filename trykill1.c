@@ -7,56 +7,76 @@
 // void print(int signo){
 //     printf(1, "inside user\n");
 // }
-int a;
+
 void handler(int signo) {
     printf(1, "Signal SIGSTOP received in user space\n");
 }
 
 void usr_sig_handler(int signo){
     // printf(1, "Inides user sihnal handler\n");
-    for(int i = 0; i < 200; i++){
+    // for(int i = 0; i < 200; i++){
 
-        printf(1, "Signal received in user space %d \n", i);
-    }
+    //     printf(1, "Signal received in user space %d \n", i);
+    // }
 
-    for(int i = 200; i < 400; i++){
+    // for(int i = 200; i < 400; i++){
 
-        printf(1, "Signal received in user space %d \n", i);
-    }
+    //     printf(1, "Signal received in user space %d \n", i);
+    // }
+    printf(1, "usr_sig_handler1\n");
 }
+
+void usr_sig_handler2(int signo){
+    printf(1, "usr_sig_handler2\n");
+}
+
 void temp2(int signo){
     
 }
 
 int main(int argc , char* argv[]){
-    a = getpid();
-    printf(1, "Starting the program\n");
-    printf(1, "Printing pid in user land %d\n", a);
+    int a = getpid();
+    // printf(1, "Starting the program\n");
+    // printf(1, "Printing pid in user land %d\n", a);
     // struct sigset_t mask;
     // struct sigset_t maskOld;
 
     // sigemptyset(&mask);
     // sigaddset(&mask, SIGKILL);
     // sigprocmask(SIG_BLOCK, &mask, &maskOld);
+    printf(1, "---->%x\n", usr_sig_handler);
+    printf(1, "---->%x\n", (usr_sig_handler));
+    signal(SIGSTOP, usr_sig_handler);
+    // signal(SIGKILL, &usr_sig_handler2);
     
-    for(int i = 0 ; i < 100; i++){
+    for(int i = 0 ; i < 50; i++){
         printf(1, "before signal %d \n", i);
     }
 
-    // signal(SIGSTOP, &usr_sig_handler);
-    // signal(SIGSTOP, SIG_DFL);
-    
     kill1(a, SIGSTOP);
 
-    for(int i = 100 ; i < 200; i++){
+    // for(int i = 50 ; i < 100; i++){
+    //     printf(1, "after signal %d \n", i);
+    // }
+
+    // kill1(a, SIGKILL);
+
+    for(int i = 100 ; i < 150; i++){
         printf(1, "after signal %d \n", i);
+    }
+    int b = 12124;
+    int* t = (int*)b;
+    while(b > 0){
+
+    printf(1, "value at 2f5c ------------> %x", *t );
+    b-=4;
     }
 
     // sigprocmask(SIG_UNBLOCK, &mask, &maskOld);
 
-    for(int i = 200 ; i < 300; i++){
-        printf(1, "after unblock %d \n", i);
-    }
+    // for(int i = 200 ; i < 300; i++){
+    //     printf(1, "after unblock %d \n", i);
+    // }
     // int pid;
     // signal(SIGSTOP, &usr_sig_handler); 
     // pid = fork();
@@ -142,22 +162,25 @@ int main(int argc , char* argv[]){
 
     // int b = fork();
     // if(b == 0){
-    //     signal(SIGSTOP, &temp);
-    //     int a = getpid();
-    //     while(1){
-    //         sleep(1);
-    //         printf(1, "i m child running\n");
-    //         kill1(a, SIGSTOP);
+        
+    //     for(int i = 0; i < 100 ; i++){
+    //         printf(1, "child %d \n", i);
     //     }
+    //     kill1(a, SIGSTOP);
+    //     for(int i = 100; i < 200 ; i++){
+    //         printf(1, "child %d \n", i);
+    //     }
+    //     kill1(a, SIGCONT);
+    //     for(int i = 200; i < 300 ; i++){
+    //         printf(1, "child %d \n", i);
+    //     }
+        
     // }
     // else{
-    //     for(int i = 0; i < 10 ; i++){
-    //         printf(1, "%d \n", i);
+    //     for(int i = 0; i < 300 ; i++){
+    //         printf(1, "parent %d \n", i);
     //     }
-    //     kill1(b,SIGSTOP);
-    //     for(int i = 20; i < 30 ; i++){
-    //         printf(1, "%d \n", i);
-    //     }
+        
     // }
     exit();
 }
