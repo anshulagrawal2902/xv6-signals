@@ -22,16 +22,16 @@ static void wakeup1(void *chan);
 extern int pause_chan;
 extern int stop_chan;
 
-void 
+void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
 }
 
 // Must be called with interrupts disabled
-int 
+int
 cpuid() {
-  return mycpu() - cpus;
+  return mycpu()-cpus;
 }
 
 // Must be called with interrupts disabled to avoid the caller being
@@ -92,7 +92,7 @@ found:
 
   release(&ptable.lock);
 
-  // Allocate kernel stack. 
+  // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
     return 0;
@@ -118,7 +118,7 @@ found:
 
 //PAGEBREAK: 32
 // Set up first user process.
-void 
+void
 userinit(void)
 {
   struct proc *p;
@@ -280,7 +280,7 @@ wait(void)
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->parent != curproc)
         continue;
       havekids = 1;
@@ -301,14 +301,13 @@ wait(void)
     }
 
     // No point waiting if we don't have any children.
-    if (!havekids || curproc->killed)
-    {
+    if(!havekids || curproc->killed){
       release(&ptable.lock);
       return -1;
     }
 
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(curproc, &ptable.lock);  // DOC: wait-sleep
+    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
 
@@ -334,7 +333,7 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if (p->state != RUNNABLE)
+      if(p->state != RUNNABLE)
         continue;
 
       // Switch to chosen process.  It is the process's job
@@ -430,7 +429,7 @@ sched(void)
 void
 yield(void)
 {
-  acquire(&ptable.lock); // DOC: yieldlock
+  acquire(&ptable.lock);  //DOC: yieldlock
   myproc()->state = RUNNABLE;
   sched();
   release(&ptable.lock);
@@ -438,13 +437,14 @@ yield(void)
 
 // A fork child's very first scheduling by scheduler()
 // will swtch here.  "Return" to user space.
-void forkret(void)
+void
+forkret(void)
 {
   static int first = 1;
   // Still holding ptable.lock from scheduler.
   release(&ptable.lock);
 
-  if (first){
+  if (first) {
     // Some initialization functions must be run in the context
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
@@ -457,7 +457,7 @@ void forkret(void)
 }
 
 // Atomically release lock and sleep on chan.
-// Reacquires lock when awakened. 
+// Reacquires lock when awakened.
 void
 sleep(void *chan, struct spinlock *lk)
 {
@@ -757,7 +757,8 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
 // No lock to avoid wedging a stuck machine further.
-void procdump(void)
+void
+procdump(void)
 {
   static char *states[] = {
   [UNUSED]    "unused",
@@ -765,7 +766,8 @@ void procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"};
+  [ZOMBIE]    "zombie"
+  };
   int i;
   struct proc *p;
   char *state;

@@ -23,7 +23,7 @@ static void(*defaultHandlers[])(int) = {
     [SIGKILL]   dh_sigkill,
     [SIGSTOP]   dh_sigstop,
     [SIGINT]    dh_sigint,
-    [SIGCONT]   dh_sigcont, 
+    [SIGCONT]   dh_sigcont,
     [SIGTERM]   dh_sigterm,
     [SIGUSR1]   dh_sigusr1,
     [SIGSEGV]   dh_sigsegv,

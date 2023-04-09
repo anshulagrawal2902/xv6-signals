@@ -114,7 +114,7 @@ sigemptyset(struct sigset_t* mask){
   return;
 }
 
-void 
+void
 sigaddset(struct sigset_t* mask, int signum){
   mask->mask[signum] = 1;
   return;
