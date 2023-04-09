@@ -251,6 +251,7 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
+  curproc->parent->pendingSignals[SIGCHLD] = 1; // sends sigchld to parent of dead process
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -366,12 +367,12 @@ scheduler(void)
           {
             c->proc->pendingSignals[i] = 0;
             // int* temp = (int*)p->tf->esp;
-            cprintf("user stack eip value %x\n" , p->tf->eip) ;
+            // cprintf("user stack eip value %x\n" , p->tf->eip) ;
             p->tf->eip = (uint) c->proc->signalHandlers[i];
-            cprintf("user stack sp value %x\n" , p->tf->esp) ;
-            cprintf("user stack bp value %x\n" , p->tf->ebp) ;
-            // cprintf("value of temp %d \n", *temp);
-            cprintf("user stac %x\n" , (c->proc->signalHandlers[i]));
+            // cprintf("user stack sp value %x\n" , p->tf->esp) ;
+            // cprintf("user stack bp value %x\n" , p->tf->ebp) ;
+            // // cprintf("value of temp %d \n", *temp);
+            // cprintf("user stac %x\n" , (c->proc->signalHandlers[i]));
             // cprintf("user stac %x\n" , c->proc->signalHandlers[i] - 4) ;
             // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
             // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
@@ -382,7 +383,7 @@ scheduler(void)
         }
       }
 
-      if(p->state == SLEEPING){
+      if(p->state == SLEEPING || p->state == ZOMBIE ){
         continue;
       }
 
@@ -421,8 +422,6 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
-  int* temp = (int*) p->tf->esp;
-  cprintf("sp is pointing to %x", temp);
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
 }
@@ -546,6 +545,8 @@ void dh_sigkill(int signo)
   cprintf("Running default sigkill\n");
   struct proc *curproc = myproc();
   curproc->killed = 1;
+  wakeup1(curproc->parent);
+  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of dead process
 }
 
 void dh_sigstop(int signo)
@@ -554,6 +555,7 @@ void dh_sigstop(int signo)
   cprintf("Running default sigstop\n");
   curproc->state = SLEEPING;
   curproc->chan = &stop_chan;
+  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of stopped process
 }
 
 void dh_sigcont(int signo)
@@ -567,9 +569,74 @@ void dh_sigcont(int signo)
   }
 }
 
+void dh_sigterm(int signo)
+{
+  //basically perform exit for a process without calling sched
+  release(&ptable.lock);
+  struct proc *curproc = myproc();
+  struct proc *p;
+  int fd;
+
+  if(curproc == initproc)
+    panic("init exiting");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
+      fileclose(curproc->ofile[fd]);
+      curproc->ofile[fd] = 0;
+    }
+  }
+
+  begin_op();
+  iput(curproc->cwd);
+  end_op();
+  curproc->cwd = 0;
+
+  acquire(&ptable.lock);
+
+  // Parent might be sleeping in wait().
+  wakeup1(curproc->parent);
+  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of zombied process
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+  curproc->state = ZOMBIE;
+}
+
 void dh_sigint(int signo)
 {
+  dh_sigterm(SIGTERM);
 }
+
+void dh_sigusr1(int){
+  cprintf("default sigusr1 does nothing\n");
+}
+
+void dh_sigsegv(int){
+
+}
+
+void dh_sigchld(int){
+  cprintf("default sigchld is ignored\n");
+}
+
+void dh_sigill(int){
+  cprintf("your process accessed a illegal memory location\n");
+  dh_sigterm(SIGTERM);
+}
+
+void dh_sigvtalrm(int){
+
+}
+
+
 
 int pause(int *pause_chan)
 {
@@ -603,10 +670,6 @@ int kill1(int pid, int signum)
   release(&ptable.lock);
   return -1;
 }
-
-// int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact ){
-
-// }
 
 int signal(int signum, signalHandler fn)
 {

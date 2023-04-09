@@ -1,9 +1,16 @@
 #include"param.h"
 #define SIG_DFL ((signalHandler) 0)
-#define SIGKILL 1
-#define SIGSTOP 2
-#define SIGINT 3
-#define SIGCONT 4
+#define SIGKILL   1
+#define SIGSTOP   2
+#define SIGINT    3
+#define SIGCONT   4
+#define SIGTERM   5
+#define SIGUSR1   6
+#define SIGSEGV   7
+#define SIGCHLD   8
+#define SIGILL    9
+#define SIGVTALRM 10
+
 #define SIG_BLOCK 100
 #define SIG_UNBLOCK 101
 #define SIG_SETMASK 102

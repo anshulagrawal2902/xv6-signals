@@ -4,25 +4,7 @@
 #include "fs.h"
 #include "signals.h"
 
-// void print(int signo){
-//     printf(1, "inside user\n");
-// }
-
-void handler(int signo) {
-    printf(1, "Signal SIGSTOP received in user space\n");
-}
-
 void usr_sig_handler(int signo){
-    // printf(1, "Inides user sihnal handler\n");
-    // for(int i = 0; i < 200; i++){
-
-    //     printf(1, "Signal received in user space %d \n", i);
-    // }
-
-    // for(int i = 200; i < 400; i++){
-
-    //     printf(1, "Signal received in user space %d \n", i);
-    // }
     printf(1, "usr_sig_handler1\n");
 }
 
@@ -30,47 +12,37 @@ void usr_sig_handler2(int signo){
     printf(1, "usr_sig_handler2\n");
 }
 
-void temp2(int signo){
-    
-}
-
 int main(int argc , char* argv[]){
     int a = getpid();
-    // printf(1, "Starting the program\n");
-    // printf(1, "Printing pid in user land %d\n", a);
-    // struct sigset_t mask;
-    // struct sigset_t maskOld;
-
-    // sigemptyset(&mask);
-    // sigaddset(&mask, SIGKILL);
-    // sigprocmask(SIG_BLOCK, &mask, &maskOld);
-    printf(1, "---->%x\n", usr_sig_handler);
-    printf(1, "---->%x\n", (usr_sig_handler));
-    signal(SIGSTOP, usr_sig_handler);
-    // signal(SIGKILL, &usr_sig_handler2);
     
     for(int i = 0 ; i < 50; i++){
         printf(1, "before signal %d \n", i);
     }
 
-    kill1(a, SIGSTOP);
-
-    // for(int i = 50 ; i < 100; i++){
-    //     printf(1, "after signal %d \n", i);
-    // }
-
-    // kill1(a, SIGKILL);
+    kill1(a, SIGTERM);
 
     for(int i = 100 ; i < 150; i++){
         printf(1, "after signal %d \n", i);
     }
-    int b = 12124;
-    int* t = (int*)b;
-    while(b > 0){
 
-    printf(1, "value at 2f5c ------------> %x", *t );
-    b-=4;
-    }
+
+    exit();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // sigprocmask(SIG_UNBLOCK, &mask, &maskOld);
 
@@ -182,5 +154,3 @@ int main(int argc , char* argv[]){
     //     }
         
     // }
-    exit();
-}
