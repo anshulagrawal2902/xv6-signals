@@ -39,3 +39,22 @@ int sys_sigprocmask(void){
   }
   return sigprocmask(how, set, oldset);
 }
+
+int sys_getitimer(void){
+  int which;
+  struct itimerval* value;
+  if(argint(0, &which) < 0 || argptr(1, (void*)&value, sizeof(value)) < 0){
+    return -1;
+  }
+  return getitimer(which, value);
+}
+
+int sys_setitimer(void){
+  int which;
+  struct itimerval* value;
+  struct itimerval* ovalue;
+  if(argint(0, &which) < 0 || argptr(1, (void*)&value, sizeof(value)) < 0  || argptr(2, (void*)&ovalue, sizeof(ovalue)) < 0){
+    return -1;
+  }
+  return setitimer(which, value, ovalue);
+}

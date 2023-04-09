@@ -251,7 +251,7 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-  curproc->parent->pendingSignals[SIGCHLD] = 1; // sends sigchld to parent of dead process
+  curproc->parent->signalState.pendingSignals |= 1 << (31 - SIGCHLD);  // sends sigchld to parent of dead process
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -345,12 +345,15 @@ scheduler(void)
       // Running loop for default handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
-        if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
+        if( (c->proc->signalState.pendingSignals & (1 << (31-i)))  == 1 << (31-i)  &&  
+        (c->proc->signalState.blockedSignals | (0 << (31-i))) == 0 )
         {
           p->chan = 0;
-          if (c->proc->hasUserHandler[i] == 0)
+          // if (c->proc->hasUserHandler[i] == 0)
+          if( (c->proc->signalState.hasUserHandler | (0 << (31-i))) == 0)
           {
-            c->proc->pendingSignals[i] = 0;
+            // c->proc->pendingSignals[i] = 0;
+            c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
             doDefaultSignal(i);
           }
         }
@@ -359,15 +362,17 @@ scheduler(void)
       // Running loop for user handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
-        if (c->proc->pendingSignals[i] == 1 && c->proc->blockedSignals[i] == 0)
+        if((c->proc->signalState.pendingSignals & (1 << (31-i))) == 1 << (31-i)  &&  
+        (c->proc->signalState.blockedSignals | (0 << (31-i))) == 0 )
         {
           p->chan = 0;
-          if (c->proc->hasUserHandler[i] == 1)
+          if( (c->proc->signalState.hasUserHandler & (1 << (31-i))) == 1 << (31-i))
           {
-            c->proc->pendingSignals[i] = 0;
+            c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
+
             // int* temp = (int*)p->tf->esp;
             // cprintf("user stack eip value %x\n" , p->tf->eip) ;
-            p->tf->eip = (uint) c->proc->signalHandlers[i];
+            p->tf->eip = (uint) c->proc->signalState.signalHandlers[i];
             // cprintf("user stack sp value %x\n" , p->tf->esp) ;
             // cprintf("user stack bp value %x\n" , p->tf->ebp) ;
             // // cprintf("value of temp %d \n", *temp);
@@ -546,7 +551,8 @@ void dh_sigkill(int signo)
   struct proc *curproc = myproc();
   curproc->killed = 1;
   wakeup1(curproc->parent);
-  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of dead process
+  curproc->parent->signalState.pendingSignals |= 1 << (31 - SIGCHLD); //sent sigchld to parent of dead process
+
 }
 
 void dh_sigstop(int signo)
@@ -554,8 +560,8 @@ void dh_sigstop(int signo)
   struct proc *curproc = myproc();
   cprintf("Running default sigstop\n");
   curproc->state = SLEEPING;
-  curproc->chan = &stop_chan;
-  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of stopped process
+  curproc->chan = &stop_chan; 
+  curproc->parent->signalState.pendingSignals |= 1 << (31 - SIGCHLD); //sent sigchld to parent of stopped process
 }
 
 void dh_sigcont(int signo)
@@ -597,7 +603,7 @@ void dh_sigterm(int signo)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-  curproc->parent->pendingSignals[SIGCHLD] = 1; //sent sigchld to parent of zombied process
+  curproc->parent->signalState.pendingSignals |= 1 << (31 - SIGCHLD); //sent sigchld to parent of zombied process
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -659,7 +665,7 @@ int kill1(int pid, int signum)
   {
     if (p->pid == pid)
     {
-      p->pendingSignals[signum] = 1; // adding signals to pending list
+      p->signalState.pendingSignals |= 1 << (31 - signum);   // adding signals to pending list
       // Wake process from sleep if necessary.
       if (p->state == SLEEPING)
         p->state = RUNNABLE;
@@ -677,26 +683,16 @@ int signal(int signum, signalHandler fn)
   if (fn == SIG_DFL)
   {
     // Restore the default signal handler
-    switch (signum)
-    {
-    case SIGSTOP:
-      curproc->hasUserHandler[SIGSTOP] = 0;
-      break;
-    case SIGINT:
-      curproc->hasUserHandler[SIGINT] = 0;
-      break;
-    case SIGKILL:
-      curproc->hasUserHandler[SIGKILL] = 0;
-      break;
-    default:
-      return -1;
-    }
+      curproc->signalState.hasUserHandler &= ~(1 << (31 - signum));
+      return 0;
+  }
+  else if(signum == SIGKILL || signum == SIGSTOP || signum == SIGSEGV){
+    return 0;
   }
   else
   {
-    curproc->hasUserHandler[signum] = 1;
-    curproc->signalHandlers[signum] = fn;
-    cprintf("function pointer inside signal %x\n", fn);
+    curproc->signalState.hasUserHandler |= 1 << (31 - signum);
+    curproc->signalState.signalHandlers[signum] = fn;
   }
   return 0;
 }
@@ -706,7 +702,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
   struct proc *curproc = myproc();
   for (int i = 0; i < MAX_SIGNALS; i++)
   {
-    if (curproc->blockedSignals[i] == 1)
+    if( (curproc->signalState.blockedSignals & (1 << (31 - i))) == (1 << (31 - i)) )
     {
       oldset->mask[i] = 1;
     }
@@ -721,7 +717,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
     {
       if (set->mask[i] == 1)
       {
-        curproc->blockedSignals[i] = 1;
+        curproc->signalState.blockedSignals |= (1 << (31 - i));
       }
     }
   }
@@ -731,7 +727,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
     {
       if (set->mask[i] == 1)
       {
-        curproc->blockedSignals[i] = 0;
+        curproc->signalState.blockedSignals &= ~(1 << (31 - i));
       }
     }
   }
@@ -742,17 +738,26 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
     {
       if (oldset->mask[i] == 1)
       {
-        curproc->blockedSignals[i] = 1;
+        curproc->signalState.blockedSignals |= (1 << (31 - i));
       }
       else
       {
-        curproc->blockedSignals[i] = 0;
+        curproc->signalState.blockedSignals &= ~(1 << (31 - i));
       }
     }
   }
   return 0;
 }
 
+int
+getitimer(int which, struct itimerval* value){
+  return 0;
+}
+
+int
+setitimer(int which, struct itimerval* value, struct itimerval* ovalue){
+  return 0;
+}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.

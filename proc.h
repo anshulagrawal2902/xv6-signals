@@ -34,6 +34,13 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+struct sigstate{
+  uint pendingSignals; //signals to be delivered
+  uint blockedSignals;  // list of blocked signals
+  uint hasUserHandler;  //checks whether user has set handler
+  void (*signalHandlers[MAX_SIGNALS])(int);  //array for signal handler function pointers
+};
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -49,10 +56,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int pendingSignals[MAX_SIGNALS]; //signals to be delivered
-  int blockedSignals[MAX_SIGNALS]; // list of blocked signals
-  int hasUserHandler[MAX_SIGNALS]; //checks whether user has set handler
-  void (*signalHandlers[MAX_SIGNALS])(int); //array for signal handler function pointers
+  struct sigstate signalState;
 };
 
 // Process memory is laid out contiguously, low addresses first:

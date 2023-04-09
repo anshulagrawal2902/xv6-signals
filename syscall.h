@@ -25,3 +25,5 @@
 #define SYS_pause        24
 #define SYS_signal       25
 #define SYS_sigprocmask  26
+#define SYS_setitimer  27
+#define SYS_getitimer  28

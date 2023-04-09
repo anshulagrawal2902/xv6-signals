@@ -10,6 +10,8 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct sigset_t;
+struct timeval;
+struct itimerval;
 
 // bio.c
 void            binit(void);
@@ -125,6 +127,8 @@ int             kill1(int,int);
 int             signal(int, void(*)(int));
 int             pause(int*);
 int             sigprocmask(int, struct sigset_t*, struct sigset_t*);
+int             setitimer(int, struct itimerval*, struct itimerval*);
+int             getitimer(int, struct itimerval*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

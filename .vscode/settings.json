@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "fs.h": "c"
+        "fs.h": "c",
+        "type_traits": "c",
+        "signals.h": "c",
+        "user.h": "c"
     }
 }
