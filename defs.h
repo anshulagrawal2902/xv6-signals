@@ -12,6 +12,7 @@ struct superblock;
 struct sigset_t;
 struct timeval;
 struct itimerval;
+struct sigstate;
 
 // bio.c
 void            binit(void);
@@ -129,6 +130,7 @@ int             pause(int*);
 int             sigprocmask(int, struct sigset_t*, struct sigset_t*);
 int             setitimer(int, struct itimerval*, struct itimerval*);
 int             getitimer(int, struct itimerval*);
+int             procSigState(int, int, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

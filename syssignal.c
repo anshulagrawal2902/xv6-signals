@@ -58,3 +58,11 @@ int sys_setitimer(void){
   }
   return setitimer(which, value, ovalue);
 }
+
+int sys_procSigState(void){
+  int pid, bitmapNum, signo;
+  if(argint(0, &pid) < 0 || argint(1, &bitmapNum) < 0 || argint(2, &signo) < 0){
+    return -1;
+  }
+  return procSigState(pid, bitmapNum, signo);
+}

@@ -7,6 +7,7 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+#include "signals.h"
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -54,7 +55,7 @@ trap(struct trapframe *tf)
       acquire(&tickslock);
       ticks++;
       wakeup(&ticks);
-      wakeup(&pause_chan);
+      wakeup(&pause_chan);  
       release(&tickslock);
     }
     lapiceoi();
@@ -94,7 +95,8 @@ trap(struct trapframe *tf)
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
-    myproc()->killed = 1;
+    // myproc()->killed = 1;         //trap handled by sending signal to process
+    myproc()->signalState.pendingSignals |= (1 << (31 - SIGILL));
   }
 
   // Force process exit if it has been killed and is in user space.

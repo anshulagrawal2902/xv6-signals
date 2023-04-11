@@ -577,7 +577,7 @@ void dh_sigcont(int signo)
 
 void dh_sigterm(int signo)
 {
-  //basically perform exit for a process without calling sched
+  //basically perform exit for a process without calling sched but returning to it
   release(&ptable.lock);
   struct proc *curproc = myproc();
   struct proc *p;
@@ -622,15 +622,14 @@ void dh_sigint(int signo)
 }
 
 void dh_sigusr1(int){
-  cprintf("default sigusr1 does nothing\n");
+ 
 }
 
 void dh_sigsegv(int){
-
+  dh_sigterm(SIGTERM);
 }
 
 void dh_sigchld(int){
-  cprintf("default sigchld is ignored\n");
 }
 
 void dh_sigill(int){
@@ -704,18 +703,18 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
   {
     if( (curproc->signalState.blockedSignals & (1 << (31 - i))) == (1 << (31 - i)) )
     {
-      oldset->mask[i] = 1;
+      oldset->mask |= 1 << (31 - i);
     }
     else
     {
-      oldset->mask[i] = 0;
+      oldset->mask &= ~(1 << (31 - i));
     }
   }
   if (how == SIG_BLOCK)
   {
     for (int i = 0; i < MAX_SIGNALS; i++)
     {
-      if (set->mask[i] == 1)
+      if((set->mask & (1 << (31 - i))) == (1 << (31 - i)) )
       {
         curproc->signalState.blockedSignals |= (1 << (31 - i));
       }
@@ -725,7 +724,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
   {
     for (int i = 0; i < MAX_SIGNALS; i++)
     {
-      if (set->mask[i] == 1)
+      if ((set->mask & (1 << (31 - i))) == (1 << (31 - i)))
       {
         curproc->signalState.blockedSignals &= ~(1 << (31 - i));
       }
@@ -736,7 +735,7 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
     // TODO : behaviour of SIG_SETMASK
     for (int i = 0; i < MAX_SIGNALS; i++)
     {
-      if (oldset->mask[i] == 1)
+      if ((oldset->mask & (1 << (31 - i))) == (1 << (31 - i)))
       {
         curproc->signalState.blockedSignals |= (1 << (31 - i));
       }
@@ -744,6 +743,31 @@ int sigprocmask(int how, struct sigset_t *set, struct sigset_t *oldset)
       {
         curproc->signalState.blockedSignals &= ~(1 << (31 - i));
       }
+    }
+  }
+  return 0;
+}
+
+int
+procSigState(int pid, int bitmapNum, int signo){  //pid, bitmapNum, signo
+  struct proc *p;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->pid == pid)
+    {
+      if(bitmapNum == 0 && (p->signalState.pendingSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
+
+        return 1;
+      } 
+      else if(bitmapNum == 1 && (p->signalState.blockedSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
+
+        return 1;
+      }
+      else if(bitmapNum == 2 && (p->signalState.blockedSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
+
+        return 1;
+      }
+      else return 0;
     }
   }
   return 0;

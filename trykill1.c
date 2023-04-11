@@ -13,13 +13,20 @@ void usr_sig_handler2(int signo){
 }
 
 int main(int argc , char* argv[]){
+
+    // struct sigset_t mask;
+    // struct sigset_t old;
+    // sigemptyset(&mask);
+    // sigaddset(&mask, SIGKILL);
+    // sigprocmask(SIG_BLOCK, &mask, &old);
+
     int a = getpid();
     
     for(int i = 0 ; i < 50; i++){
         printf(1, "before signal %d \n", i);
     }
 
-    kill1(a, SIGTERM);
+    kill1(a, SIGKILL);
 
     for(int i = 100 ; i < 150; i++){
         printf(1, "after signal %d \n", i);

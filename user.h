@@ -32,6 +32,7 @@ int pause(void);
 int sigprocmask(int, struct sigset_t*, struct sigset_t*);
 int setitimer(int, struct itimerval*, struct itimerval*);
 int getitimer(int, struct itimerval*);
+int procSigState(int, int , int);
 
 // ulib.c
 int stat(const char*, struct stat*);

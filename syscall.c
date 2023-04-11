@@ -122,6 +122,7 @@ extern int sys_pause(void);
 extern int sys_sigprocmask(void);
 extern int sys_setitimer(void);
 extern int sys_getitimer(void);
+extern int sys_procSigState(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -151,6 +152,7 @@ static int (*syscalls[])(void) = {
 [SYS_sigprocmask] sys_sigprocmask,
 [SYS_setitimer]   sys_setitimer,
 [SYS_getitimer]   sys_getitimer,
+[SYS_procSigState] sys_procSigState,
 };
 
 void

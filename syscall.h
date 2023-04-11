@@ -27,3 +27,4 @@
 #define SYS_sigprocmask  26
 #define SYS_setitimer  27
 #define SYS_getitimer  28
+#define SYS_procSigState  29

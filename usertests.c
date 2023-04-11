@@ -7,6 +7,7 @@
 #include "syscall.h"
 #include "traps.h"
 #include "memlayout.h"
+#include "signals.h"
 
 char buf[8192];
 char name[3];
@@ -1745,6 +1746,117 @@ rand()
   return randstate;
 }
 
+void userHandler(int signo){
+  printf(1, "signal handler ran in user mode");
+}
+
+int
+signalTest(){
+  int a = getpid();
+  int c = 0, b = 1;
+    sleep(4);
+    b = procSigState(a, 2, SIGUSR1);
+    signal(SIGUSR1 , userHandler);
+   c = procSigState(a, 2, SIGUSR1);
+   if(b == 0 && c==1 )
+      printf(1, "signal test passed------------------------\n");
+  
+  return 0;
+}
+
+int
+kill1Test(){
+  int a = fork();
+  int c = 0, b = 1;
+  if(a == 0){
+    sleep(4);
+    exit();
+  }
+  else{
+    b = procSigState(a, 0, SIGUSR1);
+    kill1(a, SIGUSR1);
+    c = procSigState(a, 0, SIGUSR1);
+    wait();
+    if(b == 0 && c==1 )
+      printf(1, "kill1 test passed------------------------\n");
+  }
+  return 0;
+}
+
+int
+sigprocmaskTest2(){ // for a unblockable sigal
+  int a = fork();
+  if(a == 0){
+    struct sigset_t mask;
+    struct sigset_t old;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGKILL );
+    int k = sigprocmask(SIG_BLOCK, &mask, &old);
+    sleep(1);
+    if(k == 0) // check if sigprocmask returned a zero
+      printf(1,"sigprocmask2 test failed ------------------------ \n"); // this line should not run as signal cannnot be blocked
+  }
+  else{
+    sleep(1);
+    procSigState(a, 1, SIGKILL);
+    kill1(a, SIGKILL); // send a unblockable signal
+  }
+  return 0;
+}
+
+int
+sigprocmaskTest1(){ // for blocking a signal
+  int a = fork();
+  int k;
+  if(a == 0){
+    struct sigset_t mask;
+    struct sigset_t old;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGTERM );
+    k = sigprocmask(SIG_BLOCK, &mask, &old);
+    sleep(1);
+    if(k == 0) // check if sigprocmask returned a zero
+      printf(1,"ok sigprocmask1 test passed ------------------------ \n"); // this line will only work if signal was blocked
+  }
+  else{
+    sleep(1);
+    procSigState(a, 1, SIGTERM);
+    kill1(a, SIGTERM); // send a blocked signal
+  }
+  return 0;
+}
+
+
+int
+pauseTest(){
+  int a = fork();
+  if(a == 0){
+    pause();
+  }
+  else{
+    int k = procSigState(a, 0, SIGKILL);
+    sleep(2);
+    int m = kill1(a, SIGUSR1);
+    int l = procSigState(a, 0, SIGKILL);
+    wait();
+    if(k == 0 && l == 0 && m == 0){
+      printf(1, "ok passed pause test ----------------------------- \n");
+    }
+    else 
+      printf(1, "failed pause test ----------------------------------\n");
+  }
+  return 0;
+}
+
+void
+signalUserTest(){
+  // signalTest();
+  // kill1Test();
+  // pauseTest();
+  sigprocmaskTest1();
+  // sigprocmaskTest2();
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1756,6 +1868,7 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE));
 
+  signalUserTest();
   argptest();
   createdelete();
   linkunlink();

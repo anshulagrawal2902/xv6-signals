@@ -109,13 +109,15 @@ memmove(void *vdst, const void *vsrc, int n)
 void
 sigemptyset(struct sigset_t* mask){
   for(int i  = 0; i< MAX_SIGNALS ; i++){
-    mask->mask[i] = 0;
+    mask->mask &= ~(1 << (31 - i));
   }
   return;
 }
 
 void
 sigaddset(struct sigset_t* mask, int signum){
-  mask->mask[signum] = 1;
+  if(signum == SIGKILL || signum == SIGSTOP || signum == SIGCONT)
+    return;
+  mask->mask |= (1 << (31 - signum));
   return;
 }
