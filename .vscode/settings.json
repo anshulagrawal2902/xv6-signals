@@ -3,6 +3,7 @@
         "fs.h": "c",
         "type_traits": "c",
         "signals.h": "c",
-        "user.h": "c"
+        "user.h": "c",
+        "types.h": "c"
     }
 }

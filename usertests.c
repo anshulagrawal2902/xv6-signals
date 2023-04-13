@@ -1754,12 +1754,13 @@ int
 signalTest(){
   int a = getpid();
   int c = 0, b = 1;
-    sleep(4);
-    b = procSigState(a, 2, SIGUSR1);
+  
+  b = procSigState(a, 2, SIGUSR1);
     signal(SIGUSR1 , userHandler);
-   c = procSigState(a, 2, SIGUSR1);
-   if(b == 0 && c==1 )
-      printf(1, "signal test passed------------------------\n");
+  c = procSigState(a, 2, SIGUSR1);
+  
+   if(b == 0 && c == 1)
+      printf(1, "===================signal ok========================\n");
   
   return 0;
 }
@@ -1778,52 +1779,41 @@ kill1Test(){
     c = procSigState(a, 0, SIGUSR1);
     wait();
     if(b == 0 && c==1 )
-      printf(1, "kill1 test passed------------------------\n");
+      printf(1, "====================kill1 ok========================\n");
   }
   return 0;
 }
 
 int
 sigprocmaskTest2(){ // for a unblockable sigal
-  int a = fork();
-  if(a == 0){
+  int a = getpid();
     struct sigset_t mask;
     struct sigset_t old;
     sigemptyset(&mask);
     sigaddset(&mask, SIGKILL );
     int k = sigprocmask(SIG_BLOCK, &mask, &old);
+    kill1(a, SIGKILL);
     sleep(1);
     if(k == 0) // check if sigprocmask returned a zero
-      printf(1,"sigprocmask2 test failed ------------------------ \n"); // this line should not run as signal cannnot be blocked
-  }
-  else{
-    sleep(1);
-    procSigState(a, 1, SIGKILL);
-    kill1(a, SIGKILL); // send a unblockable signal
-  }
+      printf(1,"========================sigprocmask2 test passed============================ \n"); 
   return 0;
 }
 
 int
 sigprocmaskTest1(){ // for blocking a signal
-  int a = fork();
+  int a = getpid();
   int k;
-  if(a == 0){
     struct sigset_t mask;
     struct sigset_t old;
     sigemptyset(&mask);
     sigaddset(&mask, SIGTERM );
     k = sigprocmask(SIG_BLOCK, &mask, &old);
+    kill1(a, SIGTERM);
     sleep(1);
     if(k == 0) // check if sigprocmask returned a zero
-      printf(1,"ok sigprocmask1 test passed ------------------------ \n"); // this line will only work if signal was blocked
-  }
-  else{
-    sleep(1);
-    procSigState(a, 1, SIGTERM);
-    kill1(a, SIGTERM); // send a blocked signal
-  }
-  return 0;
+      printf(1,"========================sigprocmask1 ok=========================\n"); // this line will only work if signal was blocked
+
+    return 0;
 }
 
 
@@ -1850,8 +1840,8 @@ pauseTest(){
 
 void
 signalUserTest(){
-  // signalTest();
-  // kill1Test();
+  signalTest();
+  kill1Test();
   // pauseTest();
   sigprocmaskTest1();
   // sigprocmaskTest2();

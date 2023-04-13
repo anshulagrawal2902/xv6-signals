@@ -26,7 +26,6 @@ int doSignal(int signo);
 typedef void(*signalHandler)(int);
 
 struct sigset_t{
-    // unsigned long int mask[MAX_SIGNALS];
     uint mask;
 };
 

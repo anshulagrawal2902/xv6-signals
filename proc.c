@@ -21,6 +21,8 @@ extern void trapret(void);
 static void wakeup1(void *chan);
 extern int pause_chan;
 extern int stop_chan;
+extern struct spinlock pauselock;
+
 
 void
 pinit(void)
@@ -349,16 +351,16 @@ scheduler(void)
         (c->proc->signalState.blockedSignals | (0 << (31-i))) == 0 )
         {
           p->chan = 0;
-          // if (c->proc->hasUserHandler[i] == 0)
           if( (c->proc->signalState.hasUserHandler | (0 << (31-i))) == 0)
           {
-            // c->proc->pendingSignals[i] = 0;
+
             c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
             doDefaultSignal(i);
           }
         }
       }
-
+      int flag = 0;
+      // int preveip;
       // Running loop for user handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
@@ -369,19 +371,9 @@ scheduler(void)
           if( (c->proc->signalState.hasUserHandler & (1 << (31-i))) == 1 << (31-i))
           {
             c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
-
-            // int* temp = (int*)p->tf->esp;
-            // cprintf("user stack eip value %x\n" , p->tf->eip) ;
+            flag = 1;
+            // preveip = p->tf->eip;
             p->tf->eip = (uint) c->proc->signalState.signalHandlers[i];
-            // cprintf("user stack sp value %x\n" , p->tf->esp) ;
-            // cprintf("user stack bp value %x\n" , p->tf->ebp) ;
-            // // cprintf("value of temp %d \n", *temp);
-            // cprintf("user stac %x\n" , (c->proc->signalHandlers[i]));
-            // cprintf("user stac %x\n" , c->proc->signalHandlers[i] - 4) ;
-            // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
-            // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
-            // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
-            // cprintf("user stack sp value %x\n" , p->tf->ebp) ;
             break;
           }
         }
@@ -392,6 +384,12 @@ scheduler(void)
       }
 
       switchuvm(p);
+
+      if(flag){
+          // int a = p->tf->esp;
+          // *((uint *)(a - 4)) = preveip;
+          // p->tf->esp -= 4;
+      }
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -646,12 +644,12 @@ void dh_sigvtalrm(int){
 int pause(int *pause_chan)
 {
   struct proc *curproc = myproc();
-  acquire(&ptable.lock);
+  acquire(&pauselock);
   curproc->chan = pause_chan;
   curproc->state = SLEEPING;
   while (curproc->chan == pause_chan)
     sleep(&pause_chan, &ptable.lock);
-  release(&ptable.lock);
+  release(&pauselock);
   return 0;
 }
 
@@ -668,10 +666,12 @@ int kill1(int pid, int signum)
       // Wake process from sleep if necessary.
       if (p->state == SLEEPING)
         p->state = RUNNABLE;
+
       release(&ptable.lock);
       return 0;
     }
   }
+
   release(&ptable.lock);
   return -1;
 }
@@ -763,7 +763,7 @@ procSigState(int pid, int bitmapNum, int signo){  //pid, bitmapNum, signo
 
         return 1;
       }
-      else if(bitmapNum == 2 && (p->signalState.blockedSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
+      else if(bitmapNum == 2 && (p->signalState.hasUserHandler & (1<< (31 - signo))) == (1<< (31 - signo))){
 
         return 1;
       }
