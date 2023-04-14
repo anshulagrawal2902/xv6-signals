@@ -360,7 +360,7 @@ scheduler(void)
         }
       }
       int flag = 0;
-      // int preveip;
+      int preveip;
       // Running loop for user handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
@@ -372,7 +372,7 @@ scheduler(void)
           {
             c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
             flag = 1;
-            // preveip = p->tf->eip;
+            preveip = p->tf->eip;
             p->tf->eip = (uint) c->proc->signalState.signalHandlers[i];
             break;
           }
@@ -386,9 +386,9 @@ scheduler(void)
       switchuvm(p);
 
       if(flag){
-          // int a = p->tf->esp;
-          // *((uint *)(a - 4)) = preveip;
-          // p->tf->esp -= 4;
+          int a = p->tf->esp;
+          *((uint *)(a - 4)) = preveip;
+          p->tf->esp -= 4;
       }
 
       swtch(&(c->scheduler), p->context);
@@ -619,23 +619,23 @@ void dh_sigint(int signo)
   dh_sigterm(SIGTERM);
 }
 
-void dh_sigusr1(int){
+void dh_sigusr1(int signo){
  
 }
 
-void dh_sigsegv(int){
+void dh_sigsegv(int signo){
   dh_sigterm(SIGTERM);
 }
 
-void dh_sigchld(int){
+void dh_sigchld(int signo){
 }
 
-void dh_sigill(int){
+void dh_sigill(int signo){
   cprintf("your process accessed a illegal memory location\n");
   dh_sigterm(SIGTERM);
 }
 
-void dh_sigvtalrm(int){
+void dh_sigvtalrm(int signo){
 
 }
 

@@ -19,6 +19,8 @@ int
 main(void)
 {
     int a = getpid();
+    int b = 2;
+    int c = 3;
     signal(SIGUSR1, sig_usr_hdlr);
     signal(SIGTERM, sig_usr_hdlr2);
     for(int i = 0; i < 20; i++){
@@ -32,5 +34,7 @@ main(void)
     for(int i = 0; i < 20; i++){
         printf(1, "after signal2 %d \n", i);
     }
+    int d = b + c;
+    printf(1, "b + c is %d ", d );
     exit();
 }
