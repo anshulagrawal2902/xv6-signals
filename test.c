@@ -3,9 +3,11 @@
 #include "user.h"
 #include "signals.h"
 
+int b, c;
 void sig_usr_hdlr(int a){
+    int ans = b + c;
     for(int i = 0; i < 10; i++){
-        printf(1, "this is user handler running 1 %d \n", i);
+        printf(1, "this is user handler running 1 %d \n", ans);
     }
 }
 
@@ -19,22 +21,22 @@ int
 main(void)
 {
     int a = getpid();
-    int b = 2;
-    int c = 3;
-    signal(SIGUSR1, sig_usr_hdlr);
-    signal(SIGTERM, sig_usr_hdlr2);
+    b = 2;
+    c = 3;
+    signal(SIGUSR1, sig_usr_hdlr2);
+    signal(SIGTERM, sig_usr_hdlr);
+
     for(int i = 0; i < 20; i++){
         printf(1, "before signal %d \n", i);
     }
-    kill1(a, SIGUSR1);
-    for(int i = 0; i < 20; i++){
-        printf(1, "after signal1 %d \n", i);
-    }
+
     kill1(a, SIGTERM);
-    for(int i = 0; i < 20; i++){
-        printf(1, "after signal2 %d \n", i);
+    kill1(a, SIGUSR1);
+    
+
+    for(int i = 0; i < 100; i++){
+        printf(1, "after signals %d \n", i);
     }
-    int d = b + c;
-    printf(1, "b + c is %d ", d );
+
     exit();
 }

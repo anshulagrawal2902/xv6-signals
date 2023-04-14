@@ -364,19 +364,32 @@ scheduler(void)
       // Running loop for user handlers
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
+        preveip = p->tf->eip;
         if((c->proc->signalState.pendingSignals & (1 << (31-i))) == 1 << (31-i)  &&  
         (c->proc->signalState.blockedSignals | (0 << (31-i))) == 0 )
         {
+          
+          switchuvm(p); 
           p->chan = 0;
           if( (c->proc->signalState.hasUserHandler & (1 << (31-i))) == 1 << (31-i))
           {
+            if(!flag){
+              *((uint *)(p->tf->esp -= 4)) = preveip;
+            }
+
             c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
             flag = 1;
-            preveip = p->tf->eip;
+            
             p->tf->eip = (uint) c->proc->signalState.signalHandlers[i];
-            break;
+            
+            *((uint *)(p->tf->esp -= 4)) = (uint) c->proc->signalState.signalHandlers[i];
+
           }
         }
+      }
+
+      if(flag){
+        p->tf->esp += 4;
       }
 
       if(p->state == SLEEPING || p->state == ZOMBIE ){
@@ -384,12 +397,6 @@ scheduler(void)
       }
 
       switchuvm(p);
-
-      if(flag){
-          int a = p->tf->esp;
-          *((uint *)(a - 4)) = preveip;
-          p->tf->esp -= 4;
-      }
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -535,6 +542,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
+      
       release(&ptable.lock);
       return 0;
     }
@@ -648,7 +656,7 @@ int pause(int *pause_chan)
   curproc->chan = pause_chan;
   curproc->state = SLEEPING;
   while (curproc->chan == pause_chan)
-    sleep(&pause_chan, &ptable.lock);
+    sleep(&pause_chan, &pauselock);
   release(&pauselock);
   return 0;
 }
