@@ -1754,14 +1754,13 @@ int
 signalTest(){
   int a = getpid();
   int c = 0, b = 1;
-  
   b = procSigState(a, 2, SIGUSR1);
     signal(SIGUSR1 , userHandler);
   c = procSigState(a, 2, SIGUSR1);
-  
+
    if(b == 0 && c == 1)
       printf(1, "===================signal ok========================\n");
-  
+
   return 0;
 }
 
@@ -1817,34 +1816,27 @@ sigprocmaskTest1(){ // for blocking a signal
 }
 
 
-int
+void
 pauseTest(){
   int a = fork();
   if(a == 0){
     pause();
+    printf(1, "=================if this was printed after letter A, pause passed=================");
+    exit();
   }
-  else{
-    int k = procSigState(a, 0, SIGKILL);
-    sleep(2);
-    int m = kill1(a, SIGUSR1);
-    int l = procSigState(a, 0, SIGKILL);
+    sleep(5);
+    printf(1, "=========================letter A for testing pause===================");
+    kill1(a, SIGUSR1);
     wait();
-    if(k == 0 && l == 0 && m == 0){
-      printf(1, "ok passed pause test ----------------------------- \n");
-    }
-    else 
-      printf(1, "failed pause test ----------------------------------\n");
-  }
-  return 0;
 }
 
 void
 signalUserTest(){
   signalTest();
   kill1Test();
-  // pauseTest();
+  pauseTest();
   sigprocmaskTest1();
-  // sigprocmaskTest2();
+  sigprocmaskTest2();
 }
 
 int

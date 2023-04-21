@@ -56,7 +56,7 @@ trap(struct trapframe *tf)
       acquire(&tickslock);
       ticks++;
       wakeup(&ticks);
-      wakeup(&pause_chan);  
+      wakeup(&pause_chan);
       release(&tickslock);
     }
     lapiceoi();

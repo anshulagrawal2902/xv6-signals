@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "signals.h"
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -45,6 +46,7 @@ mycpu(void)
   
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
+
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
@@ -127,6 +129,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
+
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
@@ -365,11 +368,10 @@ scheduler(void)
       for (int i = 0; i < MAX_SIGNALS; i++)
       {
         preveip = p->tf->eip;
-        if((c->proc->signalState.pendingSignals & (1 << (31-i))) == 1 << (31-i)  &&  
+        if((c->proc->signalState.pendingSignals & (1 << (31-i))) == 1 << (31-i)  &&
         (c->proc->signalState.blockedSignals | (0 << (31-i))) == 0 )
         {
-          
-          switchuvm(p); 
+          switchuvm(p);
           p->chan = 0;
           if( (c->proc->signalState.hasUserHandler & (1 << (31-i))) == 1 << (31-i))
           {
@@ -379,9 +381,7 @@ scheduler(void)
 
             c->proc->signalState.pendingSignals &= ~(1 <<  (31-i));
             flag = 1;
-            
             p->tf->eip = (uint) c->proc->signalState.signalHandlers[i];
-            
             *((uint *)(p->tf->esp -= 4)) = (uint) c->proc->signalState.signalHandlers[i];
 
           }
@@ -472,6 +472,7 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
+
   if(p == 0)
     panic("sleep");
 
@@ -542,7 +543,6 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
-      
       release(&ptable.lock);
       return 0;
     }
@@ -566,7 +566,7 @@ void dh_sigstop(int signo)
   struct proc *curproc = myproc();
   cprintf("Running default sigstop\n");
   curproc->state = SLEEPING;
-  curproc->chan = &stop_chan; 
+  curproc->chan = &stop_chan;
   curproc->parent->signalState.pendingSignals |= 1 << (31 - SIGCHLD); //sent sigchld to parent of stopped process
 }
 
@@ -628,7 +628,7 @@ void dh_sigint(int signo)
 }
 
 void dh_sigusr1(int signo){
- 
+
 }
 
 void dh_sigsegv(int signo){
@@ -766,7 +766,7 @@ procSigState(int pid, int bitmapNum, int signo){  //pid, bitmapNum, signo
       if(bitmapNum == 0 && (p->signalState.pendingSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
 
         return 1;
-      } 
+      }
       else if(bitmapNum == 1 && (p->signalState.blockedSignals & (1<< (31 - signo))) == (1<< (31 - signo))){
 
         return 1;
